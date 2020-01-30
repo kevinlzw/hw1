@@ -4,10 +4,7 @@ import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Iterator;
-import java.util.List;
+import java.util.*;
 
 public class MCA{
 
@@ -96,17 +93,10 @@ public class MCA{
 
 
     public static boolean ifCoveringArray(String filename, int t, int k, int v){
-        List<int[]> input = readFromFile(filename);
-        List<int[]> strengthcombination = generate(k, t);
-        List<int[]> combination= new ArrayList<>();
-        try{
-            FileWriter writer = new FileWriter("temp.txt", true);
-            for(int i = 0; i < t; i ++){
-                combination = constructHelperCA(combination, i, v, t, writer);
-            }
-            writer.close();
-        } catch(IOException e){
-        }
+        Map<String, List<int[]>> inputlist = returnThreeLists(filename,t,k,v);
+        List<int[]> input = inputlist.get("input");
+        List<int[]> strengthcombination = inputlist.get("strengthcombination");
+        List<int[]> combination = inputlist.get("combination");
         for(int i = 0; i < strengthcombination.size(); i++){
             for(int j = 0; j < combination.size(); j++){
                 boolean result = false;
@@ -129,6 +119,76 @@ public class MCA{
             }
         }
         return true;
+    }
+
+
+    private static Map<String, List<int[]>> returnThreeLists(String filename, int t, int k, int v){
+        Map<String, List<int[]>> result = new HashMap<>();
+        List<int[]> input = readFromFile(filename);
+        List<int[]> strengthcombination = generate(k, t);
+        List<int[]> combination= new ArrayList<>();
+        try{
+            FileWriter writer = new FileWriter("temp.txt", true);
+            for(int i = 0; i < t; i ++){
+                combination = constructHelperCA(combination, i, v, t, writer);
+            }
+            writer.close();
+        } catch(IOException e){
+        }
+        result.put("input", input);
+        result.put("strengthcombination", strengthcombination);
+        result.put("combination", combination);
+        return result;
+    }
+
+    public static List<int[]> optimizeMCA(String filename, int t, int k, int v){
+        Map<String, List<int[]>> inputlist = returnThreeLists(filename,t,k,v);
+        List<int[]> input = inputlist.get("input");
+        List<int[]> strengthcombination = inputlist.get("strengthcombination");
+        List<int[]> combination = inputlist.get("combination");
+        List<int[]> optimizedMCA = new ArrayList<>();
+        for(int i = 0; i < input.size(); i++){
+            int[] temp = input.get(i).clone();
+            optimizedMCA.add(temp);
+        }
+        boolean finished = false;
+        while(true) {
+            Map<int[], List<int[]>> optimization = new HashMap<>();
+            for(int[] scomb : strengthcombination){
+                List<int[]> newcomb = new ArrayList<>();
+                for(int i = 0; i < combination.size(); i++){
+                    int[] temp = combination.get(i).clone();
+                    newcomb.add(temp);
+                }
+                optimization.put(scomb, newcomb);
+            }
+            boolean redundant = true;
+            for (int j = 0; j < optimizedMCA.size(); j++) {
+                for (int[] scomb : strengthcombination) {
+                    int[] subinput = new int[t];
+                    for (int i = 0; i < t; i++) {
+                        subinput[i] = input.get(j)[scomb[i]];
+                    }
+                    for (int i = 0; i < combination.size(); i++) {
+                        if (Arrays.equals(subinput, combination.get(i))) {
+                            optimization.get(scomb).remove(i);
+                            redundant = false;
+                        }
+                    }
+                }
+                if (redundant) {
+                    optimizedMCA.remove(j);
+                    break;
+                }
+                if(j == optimizedMCA.size() - 1){
+                    finished = true;
+                }
+            }
+            if(finished){
+                break;
+            }
+        }
+        return optimizedMCA;
     }
 
 
