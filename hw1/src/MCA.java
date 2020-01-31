@@ -23,9 +23,7 @@ public class MCA{
             writer.close();
             System.out.println("The total row is: " + input.size());
         } catch (IOException e){
-
         }
-
     }
 
     private static List<int[]> constructHelperCA(List<int[]> input, int level, int v, int k, FileWriter writer){
@@ -91,7 +89,6 @@ public class MCA{
         return combination;
     }
 
-
     public static boolean ifCoveringArray(String filename, int t, int k, int v){
         Map<String, List<int[]>> inputlist = returnThreeLists(filename,t,k,v);
         List<int[]> input = inputlist.get("input");
@@ -120,7 +117,6 @@ public class MCA{
         }
         return true;
     }
-
 
     private static Map<String, List<int[]>> returnThreeLists(String filename, int t, int k, int v){
         Map<String, List<int[]>> result = new HashMap<>();
@@ -156,28 +152,27 @@ public class MCA{
             Map<int[], List<int[]>> optimization = new HashMap<>();
             for(int[] scomb : strengthcombination){
                 List<int[]> newcomb = new ArrayList<>();
-                for(int i = 0; i < combination.size(); i++){
-                    int[] temp = combination.get(i).clone();
-                    newcomb.add(temp);
-                }
+                newcomb.addAll(combination);
                 optimization.put(scomb, newcomb);
             }
-            boolean redundant = true;
             for (int j = 0; j < optimizedMCA.size(); j++) {
+                boolean redundant = true;
                 for (int[] scomb : strengthcombination) {
                     int[] subinput = new int[t];
                     for (int i = 0; i < t; i++) {
-                        subinput[i] = input.get(j)[scomb[i]];
+                        subinput[i] = optimizedMCA.get(j)[scomb[i]];
                     }
-                    for (int i = 0; i < combination.size(); i++) {
-                        if (Arrays.equals(subinput, combination.get(i))) {
-                            optimization.get(scomb).remove(i);
+                    for (int i = 0; i < optimization.get(scomb).size(); i++) {
+                        if (Arrays.equals(subinput, optimization.get(scomb).get(i))) {
+                            optimization.get(scomb).remove(optimization.get(scomb).get(i));
                             redundant = false;
+                            break;
                         }
                     }
                 }
                 if (redundant) {
                     optimizedMCA.remove(j);
+                    System.out.println("Current size is: " + optimizedMCA.size());
                     break;
                 }
                 if(j == optimizedMCA.size() - 1){
@@ -194,9 +189,12 @@ public class MCA{
 
     public static void main(String[] args){
         //constructCA(3,8,4, "MCA.txt");
+        List<int[]> result = optimizeMCA("MCA.txt", 3, 8, 4);
+        System.out.println(result.size());
+
         //generate(8, 3);
         //readFromFile("MCA.txt");
-        System.out.println(ifCoveringArray("MCA.txt", 3,8,4));
+        //System.out.println(ifCoveringArray("MCA.txt", 3,8,4));
     }
 
 }
