@@ -1,5 +1,4 @@
 import org.apache.commons.math3.util.CombinatoricsUtils;
-
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.FileWriter;
@@ -8,15 +7,21 @@ import java.util.*;
 
 public class MCA{
 
-
+    /**
+     * This function creates a exhaustive covering array for strength t, k columns, and v symbols and outputs the result
+     * to a txt file.
+     * @param t Strength of CA
+     * @param k Columns of CA
+     * @param v Symbols of CA
+     * @param filename  The output txt file name
+     */
     public static void constructCA(int t, int k, int v, String filename){
-        // reference: https://www.codejava.net/java-se/file-io/how-to-read-and-write-text-file-in-java
-        // reference: https://www.geeksforgeeks.org/how-to-convert-an-array-to-string-in-java/
-        // reference: https://www.tutorialspoint.com/Array-Copy-in-Java
-        // reference: https://beginnersbook.com/2013/12/how-to-joincombine-two-arraylists-in-java/
         try{
+            // How to read and write text file in Java:
+            // https://www.codejava.net/java-se/file-io/how-to-read-and-write-text-file-in-java
             FileWriter writer = new FileWriter(filename, true);
             ArrayList<int[]> input = new ArrayList<>();
+            // There are totally k columns
             for(int i = 0; i < k; i ++){
                 constructHelperCA(input, i, v, k, writer);
             }
@@ -26,20 +31,42 @@ public class MCA{
         }
     }
 
+    /**
+     * This private helper function actually adds rows for the CA at a specific column.
+     * @param input The array that is used to store the CA
+     * @param level The specific column for the CA
+     * @param v Symbols of CA
+     * @param k Columns of CA
+     * @param writer The Filewriter object used to output txt file
+     * @return The array used to store the CA
+     */
     private static List<int[]> constructHelperCA(List<int[]> input, int level, int v, int k, FileWriter writer){
         try {
+            // We want to add rows for the first column
             if (level == 0) {
                 for (int i = 0; i < v; i++) {
                     int[] temp = new int[k];
                     temp[level] = i;
                     input.add(temp);
+                    // How to convert an Array to String in Java:
+                    // https://www.geeksforgeeks.org/how-to-convert-an-array-to-string-in-java/
                     writer.write(Arrays.toString(temp));
                     writer.write("\r\n");
                 }
-            } else {
+            }
+            // If we want to add rows for different columns
+            else {
                 ArrayList<int[]> temparraylist = new ArrayList<>();
+                // Loop through each possible symbol
                 for (int i = 1; i < v; i++) {
+                    // We want to build new rows based on previous input
+                    // Especially, this part is greedy.
+                    // For example: if the previous input contains [0,0], [0,1], [1,0], [1,1],
+                    // we first add 0 to every array to make new rows such as [0,0,0], [0,1,0], [1,0,0], [1,1,0]
+                    // then add 1 to every array to make new rows such as [0,0,1], [0,1,1], [1,0,1], [1,1,1].
                     for (int j = 0; j < input.size(); j++) {
+                        // How to clone array in Java:
+                        // https://www.tutorialspoint.com/Array-Copy-in-Java
                         int[] temp = input.get(j).clone();
                         temp[level] = i;
                         temparraylist.add(temp);
@@ -54,7 +81,11 @@ public class MCA{
         return input;
     }
 
-    //https://stackoverflow.com/questions/7646392/convert-string-to-int-array-in-java
+    /**
+     * This functions is used to read file and return an array of int array
+     * @param filename The name of the txt file
+     * @return An array of int array
+     */
     private static List<int[]> readFromFile(String filename){
         ArrayList<int[]> MCA = new ArrayList<>();
         try{
@@ -62,7 +93,11 @@ public class MCA{
             BufferedReader bufferedReader = new BufferedReader(reader);
             String line;
             while ((line = bufferedReader.readLine()) != null) {
-                String[] items = line.replaceAll("\\[", "").replaceAll("\\]", "").replaceAll("\\s", "").split(",");
+                // How to convert String to int array in Java:
+                // https://stackoverflow.com/questions/7646392/convert-string-to-int-array-in-java
+                String[] items = line.replaceAll("\\[", "").
+                        replaceAll("\\]", "").
+                        replaceAll("\\s", "").split(",");
                 int[] results = new int[items.length];
                 for (int i = 0; i < items.length; i++) {
                     try {
@@ -73,55 +108,93 @@ public class MCA{
                 MCA.add(results);
             }
             reader.close();
-
         } catch(IOException e){
         }
         return MCA;
     }
 
-    // https://www.baeldung.com/java-combinations-algorithm
-    private static List<int[]> generate(int n, int r) {
+    /**
+     *  This function is used to generate interaction. n chooses r.
+     * @param n Total number of columns
+     * @param r Number of column for choosing
+     * @return An array of int array that contains every possible interaction.
+     */
+    private static List<int[]> generateComb(int n, int r) {
+        // How to generate combination in Java:
+        // https://www.baeldung.com/java-combinations-algorithm
         Iterator<int[]> iterator = CombinatoricsUtils.combinationsIterator(n, r);
-        ArrayList<int[]> combination = new ArrayList<>();
+        List<int[]> combination = new ArrayList<>();
         while (iterator.hasNext()) {
             combination.add(iterator.next());
         }
         return combination;
     }
 
+    /**
+     * This function answers Q2: check if an array is a CA.
+     * @param filename The txt file to read from
+     * @param t Strength of CA
+     * @param k Columns of CA
+     * @param v Symbols of CA
+     * @return Whether if this array is a covering array
+     */
     public static boolean ifCoveringArray(String filename, int t, int k, int v){
         Map<String, List<int[]>> inputlist = returnThreeLists(filename,t,k,v);
+        // The array read from the input txt file
         List<int[]> input = inputlist.get("input");
+        // All possible interactions
         List<int[]> strengthcombination = inputlist.get("strengthcombination");
+        // All possible combination of strength t
+        // For example, combination of 2 would be [0,0], [1,0], [0,1], [1,1]
         List<int[]> combination = inputlist.get("combination");
+        // For each possible interaction
         for(int i = 0; i < strengthcombination.size(); i++){
+            // For each combination of strength t
             for(int j = 0; j < combination.size(); j++){
                 boolean result = false;
+                // For each row in the array
                 for(int l = 0; l < input.size(); l++){
                     boolean equality = true;
+                    // Compare each value of this row at column specified by interaction
+                    // with each value of combination of size t.
                     for(int p = 0; p < t; p++){
                         if(combination.get(j)[p] != input.get(l)[strengthcombination.get(i)[p]]){
+                            // the values are not equal to each other
                             equality = false;
                             break;
                         }
                     }
+                    // This combination of length t (for example [1,0,0]) matches an interaction in the input.
                     if(equality){
                         result = true;
                         break;
                     }
                 }
+                // If no row in the input matches with a possible combination of interactions, then this input is not a CA.
                 if(!result){
                     return false;
                 }
             }
         }
+        // All interactions are examined, this input is a CA.
         return true;
     }
 
+    /**
+     * Generate three arrays that are essential for Q2 and Q3
+     * 1: Input array that have all the rows
+     * 2: Interaction array that stores k choose t
+     * 3: Combination array that stores all possible combination of t values under the restriction of v
+     * @param filename txt filename
+     * @param t Strength of CA
+     * @param k Columns of CA
+     * @param v Symbols of CA
+     * @return A Hashmap that contains three arrays
+     */
     private static Map<String, List<int[]>> returnThreeLists(String filename, int t, int k, int v){
         Map<String, List<int[]>> result = new HashMap<>();
         List<int[]> input = readFromFile(filename);
-        List<int[]> strengthcombination = generate(k, t);
+        List<int[]> strengthcombination = generateComb(k, t);
         List<int[]> combination= new ArrayList<>();
         try{
             FileWriter writer = new FileWriter("temp.txt", true);
@@ -137,6 +210,14 @@ public class MCA{
         return result;
     }
 
+    /**
+     * This function answers Q3: Optimize the CA.
+     * @param filename txt filename
+     * @param t Strength of CA
+     * @param k Columns of CA
+     * @param v Symbols of CA
+     * @return The optimized array
+     */
     public static List<int[]> optimizeMCA(String filename, int t, int k, int v){
         Map<String, List<int[]>> inputlist = returnThreeLists(filename,t,k,v);
         List<int[]> input = inputlist.get("input");
@@ -172,7 +253,6 @@ public class MCA{
                 }
                 if (redundant) {
                     optimizedMCA.remove(j);
-                    System.out.println("Current size is: " + optimizedMCA.size());
                     break;
                 }
                 if(j == optimizedMCA.size() - 1){
@@ -188,13 +268,9 @@ public class MCA{
 
 
     public static void main(String[] args){
-        //constructCA(3,8,4, "MCA.txt");
+        constructCA(3,8,4, "MCA.txt");
         List<int[]> result = optimizeMCA("MCA.txt", 3, 8, 4);
         System.out.println(result.size());
-
-        //generate(8, 3);
-        //readFromFile("MCA.txt");
-        //System.out.println(ifCoveringArray("MCA.txt", 3,8,4));
     }
 
 }
