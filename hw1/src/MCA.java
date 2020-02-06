@@ -267,10 +267,70 @@ public class MCA{
     }
 
 
+    /**
+     * Calculate percentage of interactions in this covering array.
+     * @param filename  txt filename
+     * @param t Strength of CA
+     * @param k Columns of CA
+     * @param v Symbols of CA
+     * @param covertimes The number of time an interaction is covered.
+     * @return percentage of an interaction covered in the array
+     */
+    public static double interactionPercent(String filename, int t, int k, int v, int covertimes){
+        // map used to count interactions.
+        Map<String, List<int[]>> inputlist = returnThreeLists(filename,t,k,v);
+        List<int[]> input = inputlist.get("input");
+        List<int[]> strengthcombination = inputlist.get("strengthcombination");
+        List<int[]> combination = inputlist.get("combination");
+        Map<int[], Integer> covercounts = new HashMap<>();
+        int count = 0;
+        // Total number of interactions
+        int totalinteraction = (int)CombinatoricsUtils.binomialCoefficient(k, t) * (int)Math.pow(v,t);
+        for(int i = 0; i < strengthcombination.size(); i++){
+            // initialize the map for counting interactions.
+            for(int j = 0; j < combination.size(); j++){
+                covercounts.put(combination.get(j), 0);
+            }
+            for(int p = 0; p < input.size(); p++){
+                for(int j = 0; j < combination.size(); j++){
+                    boolean equality = true;
+                    for(int a = 0; a < t; a++){
+                        if(combination.get(j)[a] != input.get(p)[strengthcombination.get(i)[a]]){
+                            // the values are not equal to each other
+                            equality = false;
+                            break;
+                        }
+                    }
+                    // A specific interaction is covered.
+                    if(equality){
+                        covercounts.put(combination.get(j), covercounts.get(combination.get(j)) + 1);
+                    }
+                }
+            }
+            // Go through the map and find interactions that are covered times specified by the parameter.
+            for(Map.Entry<int[], Integer> entry : covercounts.entrySet()){
+                if(entry.getValue() == covertimes){
+                    count++;
+                }
+            }
+        }
+        // Return the percentage 
+        return (count) / (totalinteraction * 1.0);
+    }
+
+
+
     public static void main(String[] args){
-        constructCA(3,8,4, "MCA.txt");
-        List<int[]> result = optimizeMCA("MCA.txt", 3, 8, 4);
-        System.out.println(result.size());
+        //constructCA(3,8,4, "MCA.txt");
+        //List<int[]> result = optimizeMCA("MCA.txt", 3, 8, 4);
+        //System.out.println(result.size());
+        //System.out.println(ifCoveringArray("Sfamily.txt", 2, 15, 2));
+        System.out.println(interactionPercent("Sfamily.txt", 2, 15, 2, 1));
+        System.out.println(interactionPercent("Sfamily.txt", 2, 15, 2, 2));
+        System.out.println(interactionPercent("Sfamily.txt", 2, 15, 2, 3));
+        System.out.println(interactionPercent("Sfamily.txt", 2, 15, 2, 4 ));
+
+
     }
 
 }
