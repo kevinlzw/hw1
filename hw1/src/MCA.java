@@ -195,6 +195,14 @@ public class MCA{
         Map<String, List<int[]>> result = new HashMap<>();
         List<int[]> input = readFromFile(filename);
         List<int[]> strengthcombination = generateComb(k, t);
+        List<int[]> combination= combination(t, k ,v);
+        result.put("input", input);
+        result.put("strengthcombination", strengthcombination);
+        result.put("combination", combination);
+        return result;
+    }
+
+    private static List<int[]> combination(int t, int k, int v){
         List<int[]> combination= new ArrayList<>();
         try{
             FileWriter writer = new FileWriter("temp.txt", true);
@@ -204,14 +212,12 @@ public class MCA{
             writer.close();
         } catch(IOException e){
         }
-        result.put("input", input);
-        result.put("strengthcombination", strengthcombination);
-        result.put("combination", combination);
-        return result;
+        return combination;
     }
 
+
     /**
-     * This function answers Q3: Optimize the CA.
+     * Th`is` function answers Q3: Optimize the CA.
      * @param filename txt filename
      * @param t Strength of CA
      * @param k Columns of CA
@@ -314,8 +320,60 @@ public class MCA{
                 }
             }
         }
-        // Return the percentage 
+        // Return the percentage
         return (count) / (totalinteraction * 1.0);
+    }
+
+
+    private static int[] randomArray(int v, int k){
+        Random random = new Random();
+        int[] result = new int[k];
+        for(int i = 0; i < k; i ++){
+            result[i] = random.nextInt(v);
+        }
+        return result;
+    }
+
+    private static boolean ifCoveredInteraction(int[] strengthcomb, int[] comb, int[] input){
+        for(int i = 0; i < strengthcomb.length; i++){
+            if(input[strengthcomb[i]] != comb[i]){
+                return false;
+            }
+        }
+        return true;
+    }
+
+    public static List<int[]> randomGreedy(int t, int k, int v){
+        List<int[]> strengthcombination = generateComb(k, t);
+        List<int[]> combination = combination(t, k, v);
+        double v_to_the_power_of_t = Math.pow(v,t);
+        int interaction =  (int)CombinatoricsUtils.binomialCoefficient(k, t) * (int)v_to_the_power_of_t;
+        int remaininteraction = interaction;
+        List<int[]> CA = new ArrayList<>();
+        boolean[][] interactiontrack = new boolean[strengthcombination.size()][combination.size()];
+        while ((remaininteraction / v_to_the_power_of_t) >= 1){
+            double temp = Math.ceil(remaininteraction / v_to_the_power_of_t);
+            int coveredinteraction = 0;
+            int[] randomarray = randomArray(v, k);
+            while(coveredinteraction < temp) {
+                randomarray = randomArray(v, k);
+                for(int i = 0; i < strengthcombination.size(); i ++){
+                    for(int j = 0; j < combination.size(); j++){
+                        if(ifCoveredInteraction(strengthcombination.get(i),combination.get(j), randomarray)){
+                            if(!interactiontrack[i][j]){
+                                interactiontrack[i][j] = true;
+                                remaininteraction --;
+                                coveredinteraction ++;
+                                break;
+                            }
+                        }
+                    }
+                }
+                temp = Math.ceil(remaininteraction / v_to_the_power_of_t);
+            }
+            CA.add(randomarray);
+        }
+        return CA;
     }
 
 
@@ -325,12 +383,12 @@ public class MCA{
         //List<int[]> result = optimizeMCA("MCA.txt", 3, 8, 4);
         //System.out.println(result.size());
         //System.out.println(ifCoveringArray("Sfamily.txt", 2, 15, 2));
-        System.out.println(interactionPercent("Sfamily.txt", 2, 15, 2, 1));
-        System.out.println(interactionPercent("Sfamily.txt", 2, 15, 2, 2));
-        System.out.println(interactionPercent("Sfamily.txt", 2, 15, 2, 3));
-        System.out.println(interactionPercent("Sfamily.txt", 2, 15, 2, 4 ));
-
-
+        //System.out.println(interactionPercent("Sfamily.txt", 2, 15, 2, 1));
+        //System.out.println(interactionPercent("Sfamily.txt", 2, 15, 2, 2));
+        //System.out.println(interactionPercent("Sfamily.txt", 2, 15, 2, 3));
+        //System.out.println(interactionPercent("Sfamily.txt", 2, 15, 2, 4 ));
+        List<int[]> array = randomGreedy(2, 1000, 2);
+        System.out.println(array.size());
     }
 
 }
